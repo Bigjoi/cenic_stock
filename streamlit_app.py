@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from PIL import Image
 import os
 
 # กำหนดชื่อไฟล์สำหรับบันทึกข้อมูล
@@ -16,7 +15,8 @@ def load_data():
             'รหัสสินค้า': ['SKU001', 'SKU002', 'SKU003'],
             'ชื่อสินค้า': ['สินค้า A', 'สินค้า B', 'สินค้า C'],
             'จำนวน': [10, 5, 8],
-            'รูปภาพ': ['NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg']
+            'รูปภาพ': ['NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg'],
+            'หมวดหมู่': ['หมวด A', 'หมวด B', 'หมวด A']
         }
         return pd.DataFrame(data)
 
@@ -35,11 +35,23 @@ def update_stock(index, change):
 # แสดงชื่อสินค้าและข้อมูล
 st.title('โปรแกรมจัดการสต๊อกสินค้า')
 
-for index, row in df.iterrows():
+# ตัวกรองหมวดหมู่
+categories = df['หมวดหมู่'].unique()
+selected_category = st.selectbox('เลือกหมวดหมู่:', ['ทั้งหมด'] + list(categories))
+
+# แสดงข้อมูลตามหมวดหมู่ที่เลือก
+if selected_category != 'ทั้งหมด':
+    filtered_df = df[df['หมวดหมู่'] == selected_category]
+else:
+    filtered_df = df
+
+# แสดงรายการสินค้า
+for index, row in filtered_df.iterrows():
     st.header(row['ชื่อสินค้า'])
     st.image(row['รูปภาพ'], width=150)
     st.write(f"รหัสสินค้า: {row['รหัสสินค้า']}")
     st.write(f"จำนวนสินค้า: {row['จำนวน']}")
+    st.write(f"หมวดหมู่: {row['หมวดหมู่']}")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -50,4 +62,5 @@ for index, row in df.iterrows():
             update_stock(index, -1)
 
 # แสดงข้อมูลสต๊อกสินค้าปัจจุบัน
+st.write("ข้อมูลสต๊อกสินค้าทั้งหมด:")
 st.write(df)
