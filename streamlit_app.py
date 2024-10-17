@@ -1,21 +1,36 @@
 import streamlit as st
 import pandas as pd
 from PIL import Image
+import os
 
-# สร้าง DataFrame สำหรับสินค้าคงคลัง
-data = {
-    'รหัสสินค้า': ['SKU001', 'SKU002', 'SKU003'],
-    'ชื่อสินค้า': ['สินค้า A', 'สินค้า B', 'สินค้า C'],
-    'จำนวน': [10, 5, 8],
-    'รูปภาพ': ['NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg']
-}
+# กำหนดชื่อไฟล์สำหรับบันทึกข้อมูล
+DATA_FILE = 'stock_data.csv'
 
-# สร้าง DataFrame
-df = pd.DataFrame(data)
+# ฟังก์ชันโหลดข้อมูล
+def load_data():
+    if os.path.exists(DATA_FILE):
+        return pd.read_csv(DATA_FILE)
+    else:
+        # ถ้าไม่มีไฟล์ให้สร้าง DataFrame ใหม่
+        data = {
+            'รหัสสินค้า': ['SKU001', 'SKU002', 'SKU003'],
+            'ชื่อสินค้า': ['สินค้า A', 'สินค้า B', 'สินค้า C'],
+            'จำนวน': [10, 5, 8],
+            'รูปภาพ': ['NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg']
+        }
+        return pd.DataFrame(data)
+
+# ฟังก์ชันบันทึกข้อมูล
+def save_data(df):
+    df.to_csv(DATA_FILE, index=False)
+
+# โหลดข้อมูลเมื่อเริ่มโปรแกรม
+df = load_data()
 
 # ฟังก์ชันเพื่อเพิ่มหรือลดจำนวนสินค้า
 def update_stock(index, change):
     df.at[index, 'จำนวน'] += change
+    save_data(df)  # บันทึกข้อมูลหลังจากปรับปรุง
 
 # แสดงชื่อสินค้าและข้อมูล
 st.title('โปรแกรมจัดการสต๊อกสินค้า')
