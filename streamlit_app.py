@@ -2,38 +2,62 @@ import streamlit as st
 import pandas as pd
 import os
 
-# กำหนดชื่อไฟล์สำหรับบันทึกข้อมูล
 DATA_FILE = 'stock_data.csv'
 
-# ฟังก์ชันโหลดข้อมูล
 def load_data():
     if os.path.exists(DATA_FILE):
         return pd.read_csv(DATA_FILE)
     else:
-        # ถ้าไม่มีไฟล์ให้สร้าง DataFrame ใหม่
         data = {
             'รหัสสินค้า': ['SKU001', 'SKU002', 'SKU003'],
             'ชื่อสินค้า': ['สินค้า A', 'สินค้า B', 'สินค้า C'],
             'จำนวน': [10, 5, 8],
-            'รูปภาพ': ['NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg', 'NC0000121 Ni-H Rechargeable Battery Unit.jpg'],
+            'รูปภาพ': ['NC0000121 Ni-H Rechargeable Battery Unit.jpg'] * 3,
             'หมวดหมู่': ['หมวด A', 'หมวด B', 'หมวด A']
         }
         return pd.DataFrame(data)
 
-# ฟังก์ชันบันทึกข้อมูล
 def save_data(df):
     df.to_csv(DATA_FILE, index=False)
 
-# โหลดข้อมูลเมื่อเริ่มโปรแกรม
 df = load_data()
 
-# ฟังก์ชันเพื่อเพิ่มหรือลดจำนวนสินค้า
 def update_stock(index, change):
     df.at[index, 'จำนวน'] += change
-    save_data(df)  # บันทึกข้อมูลหลังจากปรับปรุง
+    save_data(df)
+    if change > 0:
+        st.success(f"เพิ่มสินค้า {df.at[index, 'ชื่อสินค้า']} จำนวน {change} ชิ้นแล้ว!")
+    else:
+        st.success(f"ลดสินค้า {df.at[index, 'ชื่อสินค้า']} จำนวน {abs(change)} ชิ้นแล้ว!")
 
-# แสดงชื่อสินค้าและข้อมูล
+def add_product(sku, name, quantity, image, category):
+    global df
+    new_product = {
+        'รหัสสินค้า': sku,
+        'ชื่อสินค้า': name,
+        'จำนวน': quantity,
+        'รูปภาพ': image,
+        'หมวดหมู่': category
+    }
+    df = df.append(new_product, ignore_index=True)
+    save_data(df)
+    st.success(f"เพิ่มสินค้าใหม่: {name} สำเร็จแล้ว!")
+
 st.title('โปรแกรมจัดการสต๊อกสินค้า')
+
+# ฟอร์มเพิ่มสินค้าใหม่
+st.header('เพิ่มรายการสินค้าใหม่')
+
+with st.form(key='add_product_form'):
+    sku = st.text_input('รหัสสินค้า')
+    name = st.text_input('ชื่อสินค้า')
+    quantity = st.number_input('จำนวนสินค้า', min_value=0)
+    image = st.text_input('รูปภาพ (ชื่อไฟล์)')
+    category = st.selectbox('หมวดหมู่', df['หมวดหมู่'].unique())
+
+    submit_button = st.form_submit_button(label='เพิ่มสินค้า')
+    if submit_button:
+        add_product(sku, name, quantity, image, category)
 
 # ตัวกรองหมวดหมู่
 categories = df['หมวดหมู่'].unique()
